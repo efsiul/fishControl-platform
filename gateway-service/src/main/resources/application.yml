@@ -1,0 +1,41 @@
+server:
+  port: 7777
+
+logging:
+  level:
+    org:
+      springframework:
+        web:
+          cors: DEBUG
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    discovery:
+      enabled: true
+    gateway:
+      globalCors:
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "*"
+            allowedHeaders:
+              - "*"
+            exposedHeaders:
+              - "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - OPTIONS
+            allowCredentials: true
+            maxAge: 3600
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+eureka:
+  instance:
+    preferIpAddress: false
+  client:
+    service-url:
+      defaultZone: http://discovery-service:8961/eureka

@@ -1,0 +1,85 @@
+networks:
+  fc-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.31.0.0/16
+volumes:
+  fc_pgdata:
+
+services:
+  fc-db:
+    image: postgres:15
+    container_name: fc-db
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./init-db:/docker-entrypoint-initdb.d
+      - fc_pgdata:/var/lib/postgresql/data
+    networks:
+      - fc-network
+
+  discovery-service:
+    build:
+      context: ./discovery-service
+    ports:
+      - "8961:8961"
+    networks:
+      - fc-network
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  gateway-service:
+    build:
+      context: ./gateway-service
+    ports:
+      - "7777:7777"
+    networks:
+      - fc-network
+    depends_on:
+      - discovery-service
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  user-service:
+    build:
+      context: ./user-service
+    ports:
+      - "8080:8080"
+    networks:
+      - fc-network
+    depends_on:
+      - discovery-service
+      - gateway-service
+      - fc-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://fc-db:5432/fishcontrol
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+
+
+  supply-service:
+    build:
+      context: ./supply-service
+    container_name: supply-service
+    ports:
+      - "8081:8081"
+    networks:
+      - fc-network
+    depends_on:
+      - discovery-service
+      - gateway-service
+      - fc-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://fc-db:5432/fishcontrol
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+
