@@ -14,7 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Set;
 
 @SpringBootApplication
-public class userV1Application {
+public class UserServiceApplication {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -23,7 +23,7 @@ public class userV1Application {
     private UserRepository userRepository;
 
     public static void main(String[] args) {
-        SpringApplication.run(userV1Application.class, args);
+        SpringApplication.run(UserServiceApplication.class, args);
     }
 
     @Bean

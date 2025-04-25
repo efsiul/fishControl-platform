@@ -61,7 +61,7 @@ services:
       - gateway-service
       - fc-db
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://fc-db:5432/fishcontrol
+      SPRING_DATASOURCE_URL: jdbc:postgresql://fc-db:5432/user_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
 
@@ -79,7 +79,7 @@ services:
       - gateway-service
       - fc-db
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://fc-db:5432/fishcontrol
+      SPRING_DATASOURCE_URL: jdbc:postgresql://fc-db:5432/supply_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
 
