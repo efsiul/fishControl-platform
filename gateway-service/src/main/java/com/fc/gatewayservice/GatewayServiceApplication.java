@@ -33,6 +33,7 @@ public class GatewayServiceApplication {
      * service instances. It then generates the route definitions for
      * the Spring Cloud Gateway router using this information.
      */
+
     @Bean
     DiscoveryClientRouteDefinitionLocator discoveryClientRouteDefinitionLocator(ReactiveDiscoveryClient reactiveDiscoveryClient,
                                                                                 DiscoveryLocatorProperties discoveryLocatorProperties){

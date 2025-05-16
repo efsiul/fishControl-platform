@@ -1,6 +1,7 @@
 package com.fc.userservice.controllers;
 
 import com.fc.userservice.models.RefreshTokenEntity;
+import com.fc.userservice.models.UserEntity;
 import com.fc.userservice.dto.input.TokenRefreshRequest;
 import com.fc.userservice.dto.output.TokenRefreshResponse;
 import com.fc.userservice.security.exception.TokenRefreshException;
@@ -31,7 +32,6 @@ public class AuthController {
         String requestRefreshToken = request.getRefreshToken();
 
         try {
-
             return refreshTokenService.findByToken(requestRefreshToken)
                     .map(refreshTokenService::verifyExpiration)
                     .map(RefreshTokenEntity::getUser)

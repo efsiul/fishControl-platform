@@ -3,10 +3,15 @@ server:
 
 logging:
   level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web: DEBUG
+    reactor.netty: DEBUG
+    org.springframework.security: DEBUG
     org:
       springframework:
         web:
           cors: DEBUG
+
 spring:
   application:
     name: gateway-service
@@ -14,6 +19,22 @@ spring:
     discovery:
       enabled: true
     gateway:
+      routes:
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/**
+          filters:
+            - RewritePath=/user-service/(?<segment>.*), /api/$\{segment}
+            - AddRequestHeader=Authorization, Bearer
+        - id: supply-service
+          uri: lb://SUPPLY-SERVICE
+          predicates:
+            - Path=/SUPPLY-SERVICE/**
+          filters:
+            - StripPrefix=1
+            - AddRequestHeader=X-Forwarded-Prefix, /SUPPLY-SERVICE
+            - PreserveHostHeader
       globalCors:
         corsConfigurations:
           '[/**]':
@@ -27,15 +48,21 @@ spring:
               - GET
               - POST
               - PUT
+              - DELETE
               - OPTIONS
+              - PATCH
             allowCredentials: true
             maxAge: 3600
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+        - PreserveHostHeader
 
 eureka:
-  instance:
-    preferIpAddress: false
   client:
-    service-url:
-      defaultZone: http://discovery-service:8961/eureka
+    serviceUrl:
+      defaultZone: http://discovery-service:8961/eureka/
+    registerWithEureka: true
+    fetchRegistry: true
+  instance:
+    preferIpAddress: true
+    hostname: gateway-service

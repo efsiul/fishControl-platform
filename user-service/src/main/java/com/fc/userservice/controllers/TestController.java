@@ -36,4 +36,10 @@ public class TestController {
             return ResponseEntity.internalServerError().body("Error simulado correctamente: " + e.getMessage());
         }
     }
+
+    @GetMapping("/test-users")
+    public ResponseEntity<String> testUsers() {
+        return ResponseEntity.ok("Endpoint de prueba funcionando correctamente");
+    }
+
 } 
