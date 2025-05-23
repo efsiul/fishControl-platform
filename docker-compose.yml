@@ -83,3 +83,22 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
 
+
+  batch-service:
+    build:
+      context: ./batch-service
+    container_name: batch-service
+    ports:
+      - "8082:8082"
+    networks:
+      - fc-network
+    depends_on:
+      - discovery-service
+      - gateway-service
+      - fc-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://fc-db:5432/batch_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      WT_SECRET_KEY: "A8I8El6g3pJNFzwddHvdIIW1+t/ux6PLYtwkTRgi7sv7KEAeXqOkLYPFm3pyc+kmm4Tks6Q8lBG6/KW5r61zFIsCczHbP12I97XyIgQcZfBL+5tVNgtrxPWe5GLJvHoqjRejmK+nODgay6VzOxOtS3aoo0pvmz9vquF4Msb+YSU="
+      JWT_TIME_EXPIRATION: "3600000"

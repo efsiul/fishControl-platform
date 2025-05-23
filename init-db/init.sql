@@ -1,2 +1,3 @@
 CREATE DATABASE user_db;
 CREATE DATABASE supply_db;
+CREATE DATABASE batch_db;

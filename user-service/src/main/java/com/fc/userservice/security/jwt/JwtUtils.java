@@ -4,6 +4,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import io.jsonwebtoken.security.WeakKeyException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -103,6 +104,9 @@ public class JwtUtils {
 
     private Key getSignatureKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        if (keyBytes.length < 32) {
+            throw new WeakKeyException("JWT secret key is too short. It must be at least 256 bits (32 bytes) after Base64 decoding.");
+        }
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

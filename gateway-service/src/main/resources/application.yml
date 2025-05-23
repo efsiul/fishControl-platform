@@ -25,16 +25,24 @@ spring:
           predicates:
             - Path=/user-service/**
           filters:
-            - RewritePath=/user-service/(?<segment>.*), /api/$\{segment}
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
             - AddRequestHeader=Authorization, Bearer
+
         - id: supply-service
           uri: lb://SUPPLY-SERVICE
           predicates:
-            - Path=/SUPPLY-SERVICE/**
+            - Path=/api/supplies/**
           filters:
-            - StripPrefix=1
-            - AddRequestHeader=X-Forwarded-Prefix, /SUPPLY-SERVICE
-            - PreserveHostHeader
+            - RewritePath=/api/supplies/(?<segment>.*), /$\{segment}
+            - AddRequestHeader=Authorization, Bearer
+
+        - id: batch-service
+          uri: lb://BATCH-SERVICE
+          predicates:
+            - Path=/api/batches/**
+          filters:
+            - RewritePath=/api/batches/(?<segment>.*), /$\{segment}
+            - AddRequestHeader=Authorization, Bearer
       globalCors:
         corsConfigurations:
           '[/**]':

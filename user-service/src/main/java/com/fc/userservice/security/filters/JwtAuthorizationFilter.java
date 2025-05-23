@@ -34,50 +34,56 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     private UserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request,
-                                    @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String userEmail;
+        // Mejorar logging para depuración
+        String path = request.getServletPath();
+        log.info("Procesando solicitud para: {}", path);
 
-        if (request.getServletPath().contains("/api/login") ||
-                request.getServletPath().contains("/api/health") ||
-                request.getServletPath().contains("/api/test") ||
-                request.getServletPath().contains("/api/auth")) {
+        // Verificar si es una ruta pública
+        if (path.equals("/api/login") ||
+                path.startsWith("/api/auth") ||
+                path.startsWith("/api/health") ||
+                path.startsWith("/api/test")) {
+            log.info("Ruta pública detectada: {}", path);
             filterChain.doFilter(request, response);
             return;
         }
 
+        // Obtener token del encabezado
+        String authHeader = request.getHeader("Authorization");
+        log.info("Encabezado de autorización: {}", authHeader);
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            sendErrorResponse(response, "Token de autorización faltante o inválido");
+            log.warn("Token no encontrado o formato inválido");
+            filterChain.doFilter(request, response);
             return;
         }
 
-        jwt = authHeader.substring(7);
+        // Extraer y validar token
+        String jwt = authHeader.substring(7);
         try {
-            userEmail = jwtUtils.getUsernameFromToken(jwt);
+            String username = jwtUtils.getUsernameFromToken(jwt);
+            log.info("Token válido para usuario: {}", username);
 
-            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                if (jwtUtils.isTokenValid(jwt, userDetails)) {
+                if (jwtUtils.isTokenValid(jwt)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
-                    );
+                            userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    log.info("Usuario autenticado: {}", username);
                 }
             }
             filterChain.doFilter(request, response);
         } catch (Exception e) {
-            log.error("Error en la autorización: {}", e.getMessage());
-            sendErrorResponse(response, "Error de autorización: " + e.getMessage());
+            log.error("Error en autorización: {}", e.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Error de autorización: " + e.getMessage());
         }
     }
 

@@ -1,5 +1,10 @@
 package com.fc.supplyservice.models;
 
 public enum ESupplyType {
-    FOOD,
+    MEDICINE,    // Medicamentos
+    FOOD,        // Alimento
+    EQUIPMENT,   // Equipo
+    PACKAGING,   // Material de empaque
+    DISINFECTANT, // Desinfectantes
+    OTHER
 }

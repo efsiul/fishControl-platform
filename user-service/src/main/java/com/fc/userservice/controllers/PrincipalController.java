@@ -52,50 +52,43 @@ public class PrincipalController {
     private UserDetailsServiceImpl userDetailsService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
-            UserEntity user = userRepository.findByUsername(loginRequest.getUsername())
-                    .orElseThrow(() -> {
-                        log.error("Intento de login fallido: Usuario no encontrado - Username: {}",
-                                loginRequest.getUsername());
-                        return new UsernameNotFoundException("Usuario no encontrado");
-                    });
-
-            if (!user.getEnabled()) {
-                log.error("Intento de login fallido: Usuario deshabilitado - Username: {}",
-                        loginRequest.getUsername());
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("El usuario está deshabilitado.");
-            }
-
+            // Autenticar al usuario
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
+            // Establecer la autenticación en el contexto de seguridad
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
+            // Obtener el usuario autenticado
+            UserEntity user = userRepository.findByUsername(loginRequest.getUsername())
+                    .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+
+            // Obtener roles
             List<String> roles = user.getRoles().stream()
                     .map(role -> "ROLE_" + role.getName().name())
-                    .toList();
+                    .collect(Collectors.toList());
 
+            // Generar token JWT
             String jwt = jwtUtils.generateAccessToken(user.getUsername(), roles);
 
+            // Crear respuesta
             Map<String, Object> response = new HashMap<>();
             response.put("token", jwt);
             response.put("username", authentication.getName());
             response.put("roles", roles);
 
+            // Log para depuración
             log.info("Login exitoso - Username: {}", loginRequest.getUsername());
-            return ResponseEntity.ok(response);
 
+            return ResponseEntity.ok(response);
         } catch (BadCredentialsException e) {
-            log.error("Intento de login fallido: Credenciales inválidas - Username: {}",
-                    loginRequest.getUsername());
+            log.error("Credenciales inválidas para usuario: {}", loginRequest.getUsername());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciales inválidas");
-        } catch (UsernameNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         } catch (Exception e) {
-            log.error("Error en login - Username: {} - Error: {}",
-                    loginRequest.getUsername(), e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error de autenticación");
+            log.error("Error en login: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error de autenticación");
         }
     }
 
